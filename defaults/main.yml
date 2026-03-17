@@ -26,7 +26,8 @@ seerr_hostname: ""
 # This value must either be `/` or not end with a slash (e.g. `/seerr`).
 seerr_path_prefix: /
 
-seerr_version: latest
+# renovate: datasource=docker depName=ghcr.io/seerr-team/seerr versioning=semver
+seerr_version: v3.1.0
 
 seerr_arch: amd64
 

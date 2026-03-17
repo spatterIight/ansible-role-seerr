@@ -17,7 +17,7 @@
       "automergeSchedule": ["* 0-6 1 * *"]
     },
     {
-      "matchDepNames": ["bind"],
+      "matchDepNames": ["seerr"],
       "allowedVersions": "/^\\d+\\.\\d*[02468](\\..+)?$/"
     }
   ],

@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: (Deprecation) Catch and report renamed settings
+  ansible.builtin.fail:
+    msg: >-
+      Your configuration contains a variable, which now has a different name.
+      Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
+  when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
+  with_items: []
+
+- name: Fail if required Seerr settings not defined
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item }}`).
+  when: "lookup('vars', item, default='') | string | length == 0"
+  with_items:
+    - seerr_uid
+    - seerr_gid
+    - seerr_hostname
+    - seerr_path_prefix
+    - seerr_container_network
+
+- name: Validate Seerr Traefik configuration
+  when: seerr_container_labels_traefik_enabled | bool
+  block:
+    - name: Fail if Traefik settings required for Seerr are not defined
+      ansible.builtin.fail:
+        msg: >-
+          You need to define a required configuration setting (`{{ item }}`).
+      when: "lookup('vars', item, default='') | string | length == 0"
+      with_items:
+        - seerr_container_labels_traefik_hostname
+        - seerr_container_labels_traefik_path_prefix
+
+    # We ensure it doesn't end with a slash, because we handle both (slash and no-slash).
+    # Knowing that `seerr_container_labels_traefik_path_prefix` does not end with a slash
+    # ensures we know how to set these routes up without having to do "does it end with a slash" checks elsewhere.
+    - name: Fail if seerr_container_labels_traefik_path_prefix ends with a slash
+      ansible.builtin.fail:
+        msg: >-
+          seerr_container_labels_traefik_path_prefix (`{{ seerr_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/seerr`).
+      when: "seerr_container_labels_traefik_path_prefix != '/' and seerr_container_labels_traefik_path_prefix[-1] == '/'"

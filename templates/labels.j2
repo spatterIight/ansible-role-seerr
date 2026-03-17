@@ -1,0 +1,46 @@
+{#
+SPDX-FileCopyrightText: 2025 spatterlight
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+{% if seerr_container_labels_traefik_enabled %}
+traefik.enable=true
+
+{% if seerr_container_labels_traefik_docker_network %}
+traefik.docker.network={{ seerr_container_labels_traefik_docker_network }}
+{% endif %}
+
+{% set middlewares = [] %}
+
+{% if seerr_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ seerr_identifier }}-slashless-redirect.redirectregex.regex=^({{ seerr_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ seerr_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
+{% set middlewares = middlewares + [seerr_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{% if seerr_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ seerr_identifier }}-strip-prefix.stripprefix.prefixes={{ seerr_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [seerr_identifier + '-strip-prefix'] %}
+{% endif %}
+
+traefik.http.routers.{{ seerr_identifier }}.rule={{ seerr_container_labels_traefik_rule }}
+{% if seerr_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ seerr_identifier }}.priority={{ seerr_container_labels_traefik_priority }}
+{% endif %}
+traefik.http.routers.{{ seerr_identifier }}.service={{ seerr_identifier }}
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ seerr_identifier }}.middlewares={{ middlewares | join(',') }}
+{% endif %}
+traefik.http.routers.{{ seerr_identifier }}.entrypoints={{ seerr_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ seerr_identifier }}.tls={{ seerr_container_labels_traefik_tls | to_json }}
+{% if seerr_container_labels_traefik_tls %}
+traefik.http.routers.{{ seerr_identifier }}.tls.certResolver={{ seerr_container_labels_traefik_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ seerr_identifier }}.loadbalancer.server.port={{ seerr_container_http_port }}
+{% endif %}
+
+{% for arg in seerr_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}

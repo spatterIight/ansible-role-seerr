@@ -27,7 +27,7 @@ seerr_hostname: ""
 seerr_path_prefix: /
 
 # renovate: datasource=docker depName=ghcr.io/seerr-team/seerr versioning=semver
-seerr_version: v3.1.0
+seerr_version: v3.2.0
 
 seerr_arch: amd64
 

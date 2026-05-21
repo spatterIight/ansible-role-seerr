@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
 - name: Perform Seerr installation tasks
+  when: seerr_enabled | bool
   tags:
     - setup-all
     - setup-seerr
@@ -12,17 +14,15 @@
     - install-seerr
   block:
     - name: Validate Seerr configuration
-      when: seerr_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
     - name: Install Seerr
-      when: seerr_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
 - name: Perform Seerr uninstallation tasks
+  when: not seerr_enabled | bool
   tags:
     - setup-all
     - setup-seerr
   block:
     - name: Uninstall Seerr
-      when: not seerr_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"

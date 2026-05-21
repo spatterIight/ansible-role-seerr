@@ -1,5 +1,6 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 spatterlight
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -24,6 +25,28 @@
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ seerr_identifier }}.service"
         state: absent
 
+    - name: Ensure Seerr support files do not exist
+      ansible.builtin.file:
+        path: "{{ seerr_base_path }}/{{ item }}"
+        state: absent
+      with_items:
+        - env
+        - labels
+
+    - name: Ensure Seerr local data path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ seerr_data_path }}"
+      register: seerr_data_path_deletion_result
+      changed_when: seerr_data_path_deletion_result.rc == 0
+      failed_when: false
+
+    - name: Ensure Seerr base path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ seerr_base_path }}"
+      register: seerr_base_path_deletion_result
+      changed_when: seerr_base_path_deletion_result.rc == 0
+      failed_when: false
+
     - name: Ensure Seerr container network does not exist
       when: seerr_container_network_deletion_enabled
       block:
@@ -43,7 +66,20 @@
           register: seerr_network_deletion_result
           changed_when: seerr_container_network in seerr_network_deletion_result.stdout
 
-    - name: Ensure Seerr path does not exist
-      ansible.builtin.file:
-        path: "{{ seerr_base_path }}"
-        state: absent
+- name: Check existence of Seerr local data path
+  ansible.builtin.stat:
+    path: "{{ seerr_data_path }}"
+  register: seerr_data_path_stat
+
+# We just want to notify the user. Deleting data is too destructive.
+- name: Inject the message about the remaining Seerr local data path
+  when: seerr_data_path_stat.stat.exists | bool
+  ansible.builtin.set_fact:
+    devture_playbook_runtime_messages_list: |
+      {{
+        devture_playbook_runtime_messages_list | default([])
+        +
+        [
+          "Note: As the local Seerr instance has been removed, some old data remains in `" + seerr_data_path + "`. Feel free to delete it."
+        ]
+      }}

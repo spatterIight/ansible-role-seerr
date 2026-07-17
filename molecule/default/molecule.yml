@@ -34,7 +34,7 @@ provisioner:
         # Variables for Seerr
         seerr_uid: 1000
         seerr_gid: 1000
-        seerr_hostname: seerr
+        seerr_hostname: localhost
         seerr_container_labels_traefik_enabled: false
         seerr_container_http_host_bind_port: 5055
   env:
